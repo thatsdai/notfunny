@@ -1,0 +1,64 @@
+for /f "tokens=3*" %%i in ('reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\NetworkCards" /f "ServiceName" /s^|findstr /i /l "ServiceName"') do (
+reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\%%i" /v "TCPNoDelay" /d "1" /t REG_DWORD /f
+reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\%%i" /v "TcpAckFrequency" /d "1" /t REG_DWORD /f
+reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\%%i" /v "TcpDelAckTicks" /d "0" /t REG_DWORD /f
+reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\%%i" /v "DefaultTTL" /d "64" /t REG_DWORD /f
+reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\%%i" /v "TcpMaxDataRetransmissions" /d "3" /t REG_DWORD /f
+)
+reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "DefaultTTL" /d "64" /t REG_DWORD /f
+reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "TcpMaxDataRetransmissions" /d "3" /t REG_DWORD /f
+reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "Tcp1323Opts" /d "1" /t REG_DWORD /f
+reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "TcpMaxDupAcks" /d "3" /t REG_DWORD /f
+reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "TcpNumConnections" /d "4294967294" /t REG_DWORD /f
+reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "TcpTimedWaitDelay" /d "30" /t REG_DWORD /f
+reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "EnableDHCP" /d "0" /t REG_DWORD /f
+reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "SackOpts" /d "1" /t REG_DWORD /f
+reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "KeepAliveTime" /d "1" /t REG_DWORD /f
+reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "TCPCongestionControl" /d "1" /t REG_DWORD /f
+reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "EnablePMTUBHDetect" /d "1" /t REG_DWORD /f
+reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "EnablePMTUDiscovery" /d "1" /t REG_DWORD /f
+reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "EnableMulticastForwarding" /d "0" /t REG_DWORD /f
+reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "KeepAliveInterval" /d "1" /t REG_DWORD /f
+reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "MaxUserPorts" /d "65534" /t REG_DWORD /f
+reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "MaxFreeTcbs" /d "65535" /t REG_DWORD /f
+reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "NumForwardPackets" /d "1" /t REG_DWORD /f
+reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "DisableIPSourceRouting" /d "1" /t REG_DWORD /f
+reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "DisableMediaSenseEventLog" /d "1" /t REG_DWORD /f
+reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\QoS" /v "Do not use NLA" /d "1" /t REG_SZ /f
+reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Psched" /v "NonBestEffortLimit" /d "0" /t REG_DWORD /f
+PowerShell.exe Set-NetTCPSetting -DynamicPortRangeStartPort 1024 -DynamicPortRangeNumberOfPorts 64512
+PowerShell.exe Set-NetTCPSetting -SettingName InternetCustom -InitialRTO 300
+PowerShell.exe Set-NetTCPSetting -SettingName InternetCustom -AutoTuningLevelLocal Disabled
+PowerShell.exe Set-NetTCPSetting -SettingName InternetCustom -NonSackRttResiliency Disabled
+PowerShell.exe Set-NetTCPSetting -SettingName InternetCustom -EcnCapability Disabled
+PowerShell.exe Set-NetOffloadGlobalSetting -PacketCoalescingFilter Disabled
+PowerShell.exe Set-NetIPv4Protocol -SourceRoutingBehavior Drop
+PowerShell.exe Set-NetIPv4Protocol -NeighborCacheLimitEntries 4056
+PowerShell.exe Set-NetIPv4Protocol -DhcpMediaSense Disabled
+PowerShell.exe Set-NetIsatapConfiguration -State Disabled
+PowerShell.exe Disable-NetAdapterBinding -Name "*" -ComponentID "ms_pacer"
+sc stop DPS
+sc config DPS start=disabled
+sc stop TrkWks
+sc config TrkWks start=disabled
+sc stop iphlpsvc
+sc config iphlpsvc start=disabled
+sc stop CscService
+sc config CscService start=disabled
+sc stop WPDBusEnum
+sc config WPDBusEnum start=disabled
+sc stop Spooler
+sc config Spooler start=disabled
+netsh int tcp set global rsc=enabled
+netsh int tcp set global maxsynretransmissions=2
+netsh int tcp set supplemental Internet congestionprovider=ctcp
+netsh int tcp set global autotuninglevel=disabled
+netsh int tcp set global timestamps=disabled
+netsh int tcp set global netdma=enabled
+netsh int tcp set global dca=enabled
+PowerShell.exe Set-NetIPv4Protocol -SourceRoutingBehavior Drop
+PowerShell.exe Set-NetOffloadGlobalSetting -TaskOffload Disabled
+PowerShell.exe Set-NetIPv4Protocol -DhcpMediaSense Disabled
+PowerShell.exe Disable-AppBackgroundTaskDiagnosticLog
+PowerShell.exe New-NetQosPolicy -Name "Promoter" -Precedence 255 -AppPathNameMatchCondition "nothing.exe" -DSCPAction 46 -MinBandwidthWeightAction 1 -PriorityValue8021Action 1 -IPProtocol TCP
+PowerShell.exe Restart-NetAdapter -Name *
